@@ -17,17 +17,17 @@ export default async function AdminDashboard() {
   let recentEnrollments = []
 
   try {
-    // Get stats
+    // Get stats with proper error handling
     const [
       coursesResult,
       studentsResult,
       enrollmentsResult,
       paymentsResult
     ] = await Promise.all([
-      supabase.from('courses').select('*', { count: 'exact', head: true }).then(r => r).catch(() => ({ count: 0 })),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').then(r => r).catch(() => ({ count: 0 })),
-      supabase.from('enrollments').select('*', { count: 'exact', head: true }).then(r => r).catch(() => ({ count: 0 })),
-      supabase.from('payments').select('amount').eq('status', 'completed').then(r => r).catch(() => ({ data: [] }))
+      supabase.from('courses').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+      supabase.from('enrollments').select('*', { count: 'exact', head: true }),
+      supabase.from('payments').select('amount').eq('status', 'completed')
     ])
 
     coursesCount = coursesResult.count || 0
@@ -36,18 +36,16 @@ export default async function AdminDashboard() {
     totalRevenue = paymentsResult.data?.reduce((sum, payment) => sum + payment.amount, 0) || 0
 
     // Get recent courses
-    const coursesData = await supabase
+    const { data: coursesData } = await supabase
       .from('courses')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(5)
-      .then(r => r.data || [])
-      .catch(() => [])
 
-    recentCourses = coursesData
+    recentCourses = coursesData || []
 
     // Get recent enrollments
-    const enrollmentsData = await supabase
+    const { data: enrollmentsData } = await supabase
       .from('enrollments')
       .select(`
         id,
@@ -57,10 +55,8 @@ export default async function AdminDashboard() {
       `)
       .order('created_at', { ascending: false })
       .limit(5)
-      .then(r => r.data || [])
-      .catch(() => [])
 
-    recentEnrollments = enrollmentsData
+    recentEnrollments = enrollmentsData || []
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   }
