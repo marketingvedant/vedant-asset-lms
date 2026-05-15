@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -33,25 +34,71 @@ export default function SignupPage() {
       return
     }
 
-    const supabase = createClient()
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      // Try to create profile if signup was successful
-      try {
-        await fetch('/api/create-profile', { method: 'POST' })
-      } catch (err) {
-        console.error('Failed to create profile:', err)
+      if (error) {
+        setError(error.message)
+      } else {
+        console.log('Signup successful:', data)
+        setSuccess(true)
+        
+        // If user is immediately confirmed (email confirmation disabled)
+        if (data.user && !data.user.email_confirmed_at) {
+          // Show success message for email confirmation
+          setSuccess(true)
+        } else if (data.user && data.user.email_confirmed_at) {
+          // User is immediately confirmed, redirect to login
+          setTimeout(() => {
+            router.push('/login')
+          }, 2000)
+        }
       }
-      router.push('/student/dashboard')
+    } catch (err) {
+      console.error('Signup error:', err)
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-green-600">Account Created!</CardTitle>
+            <CardDescription>
+              Please check your email to confirm your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="p-4 bg-green-50 rounded-lg">
+              <p className="text-sm text-green-700">
+                We've sent a confirmation email to <strong>{email}</strong>
+              </p>
+              <p className="text-sm text-green-600 mt-2">
+                Click the link in the email to activate your account, then return to sign in.
+              </p>
+            </div>
+            
+            <Link href="/login">
+              <Button className="w-full">
+                Go to Sign In
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

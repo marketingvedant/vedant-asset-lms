@@ -23,6 +23,14 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
       
+      // Clear any existing invalid sessions first
+      try {
+        await supabase.auth.signOut()
+      } catch (signOutError) {
+        // Ignore signout errors
+        console.log('Clearing previous session')
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -102,6 +110,20 @@ export default function LoginPage() {
     }
   }
 
+  const clearAuthAndRetry = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      localStorage.clear()
+      sessionStorage.clear()
+      setError('')
+      setEmail('')
+      setPassword('')
+    } catch (error) {
+      console.error('Error clearing auth:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
@@ -115,7 +137,18 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-                {error}
+                <div className="flex items-center justify-between">
+                  <span>{error}</span>
+                  {error.includes('refresh') || error.includes('token') ? (
+                    <button
+                      type="button"
+                      onClick={clearAuthAndRetry}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
+                    >
+                      Clear & Retry
+                    </button>
+                  ) : null}
+                </div>
               </div>
             )}
             
