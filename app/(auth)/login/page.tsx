@@ -23,15 +23,7 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
       
-      // Clear any existing invalid sessions first
-      try {
-        await supabase.auth.signOut()
-      } catch (signOutError) {
-        // Ignore signout errors
-        console.log('Clearing previous session')
-      }
-      
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -42,22 +34,20 @@ export default function LoginPage() {
         return
       }
 
-      // Get user profile to determine redirect
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        console.log('User logged in:', user.email)
+      if (data.user) {
+        console.log('User logged in:', data.user.email)
         
         // Try to get profile
-        let { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('id', data.user.id)
           .single()
         
         console.log('Profile fetch result:', { profile, profileError })
         
         // If no profile exists, create one
-        if (!profile) {
+        if (!profile && !profileError) {
           console.log('No profile found, creating one...')
           try {
             const response = await fetch('/api/create-profile', { 
@@ -67,31 +57,34 @@ export default function LoginPage() {
               }
             })
             
-            if (!response.ok) {
-              throw new Error('Failed to create profile')
+            if (response.ok) {
+              // Wait a moment for the profile to be created
+              await new Promise(resolve => setTimeout(resolve, 1000))
+              
+              // Try to get profile again
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', data.user.id)
+                .single()
+              
+              if (newProfile) {
+                console.log('New profile created:', newProfile)
+                // Redirect based on new profile
+                if (newProfile.role === 'admin') {
+                  window.location.href = '/admin-dashboard'
+                } else {
+                  window.location.href = '/student/dashboard'
+                }
+                return
+              }
             }
-            
-            // Wait a moment for the profile to be created
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            // Try to get profile again
-            const { data: newProfile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', user.id)
-              .single()
-            
-            profile = newProfile
-            console.log('New profile created:', profile)
           } catch (err) {
             console.error('Failed to create profile:', err)
-            setError('Failed to create user profile. Please try again.')
-            setLoading(false)
-            return
           }
         }
         
-        // Redirect based on role
+        // Redirect based on existing profile or default to student
         if (profile?.role === 'admin') {
           console.log('Redirecting to admin dashboard')
           window.location.href = '/admin-dashboard'
@@ -114,7 +107,7 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      localStorage.clear()
+      localStorage.removeItem('supabase.auth.token')
       sessionStorage.clear()
       setError('')
       setEmail('')
