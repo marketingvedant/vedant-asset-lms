@@ -13,8 +13,8 @@ export default async function AdminDashboard() {
   let studentsCount = 0
   let enrollmentsCount = 0
   let totalRevenue = 0
-  let recentCourses = []
-  let recentEnrollments = []
+  let recentCourses: any[] = []
+  let recentEnrollments: any[] = []
 
   try {
     // Get stats with proper error handling
