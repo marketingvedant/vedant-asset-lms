@@ -132,7 +132,7 @@ export default function SimpleDashboardPage() {
                   <Link href="/courses">
                     <Button className="w-full">Browse Courses</Button>
                   </Link>
-                  <Link href="/student/dashboard">
+                  <Link href="/student-dashboard">
                     <Button variant="outline" className="w-full">Student Dashboard</Button>
                   </Link>
                 </div>

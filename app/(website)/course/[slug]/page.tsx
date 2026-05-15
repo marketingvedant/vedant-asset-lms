@@ -152,7 +152,7 @@ export default function CoursePage() {
   }
 
   const goToCourse = () => {
-    router.push(`/student/course/${course?.slug}`)
+    router.push(`/student-course/${course?.slug}`)
   }
 
   if (loading) {
@@ -191,7 +191,7 @@ export default function CoursePage() {
               <Link href="/" className="text-gray-500 hover:text-gray-900">Home</Link>
               <Link href="/courses" className="text-gray-500 hover:text-gray-900">Courses</Link>
               {user ? (
-                <Link href="/student/dashboard" className="text-gray-500 hover:text-gray-900">Dashboard</Link>
+                <Link href="/student-dashboard" className="text-gray-500 hover:text-gray-900">Dashboard</Link>
               ) : (
                 <Link href="/login" className="text-gray-500 hover:text-gray-900">Login</Link>
               )}

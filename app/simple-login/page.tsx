@@ -45,7 +45,7 @@ export default function SimpleLoginPage() {
           if (profile?.role === 'admin') {
             window.location.href = '/admin-dashboard'
           } else {
-            window.location.href = '/simple-dashboard'
+            window.location.href = '/student-dashboard'
           }
         }, 1000)
       }
