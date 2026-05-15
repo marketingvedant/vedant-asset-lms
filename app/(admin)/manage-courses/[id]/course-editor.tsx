@@ -153,7 +153,7 @@ function CourseDetailsTab({
       slug: createSlug(title),
       description,
       price: parseFloat(price) || 0,
-      thumbnail: thumbnail || null,
+      thumbnail: thumbnail || undefined,
     })
   }
 
