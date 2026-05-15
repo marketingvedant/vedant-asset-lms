@@ -1,53 +1,90 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { 
   BookOpen, 
   Users, 
-  Plus,
   Search,
-  Filter,
-  MoreVertical,
+  Plus,
+  Settings,
+  Bell,
   Edit,
   Trash2,
   Eye,
-  Settings,
-  Bell
+  DollarSign
 } from 'lucide-react'
 
-export default function AdminCourses() {
-  const courses = [
-    {
-      id: 1,
-      title: "JavaScript Fundamentals",
-      description: "Learn the basics of JavaScript programming",
-      students: 324,
-      status: "Published",
-      price: 2999,
-      created: "2024-01-15",
-      thumbnail: "/api/placeholder/300/200"
-    },
-    {
-      id: 2,
-      title: "React Development",
-      description: "Build modern web applications with React",
-      students: 256,
-      status: "Published",
-      price: 4999,
-      created: "2024-02-01",
-      thumbnail: "/api/placeholder/300/200"
-    },
-    {
-      id: 3,
-      title: "Node.js Backend",
-      description: "Server-side development with Node.js",
-      students: 189,
-      status: "Draft",
-      price: 3999,
-      created: "2024-02-15",
-      thumbnail: "/api/placeholder/300/200"
+interface Course {
+  id: string
+  title: string
+  slug: string
+  description: string
+  price: number
+  thumbnail: string
+  published: boolean
+  created_at: string
+  lessons?: { count: number }[]
+}
+
+export default function AdminCoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    fetchCourses()
+  }, [])
+
+  const fetchCourses = async () => {
+    try {
+      const supabase = createClient()
+      
+      const { data, error } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          lessons(count)
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setCourses(data || [])
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  const deleteCourse = async (courseId: string) => {
+    if (!confirm('Are you sure you want to delete this course?')) return
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', courseId)
+
+      if (error) throw error
+      
+      setCourses(courses.filter(course => course.id !== courseId))
+      alert('Course deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting course:', error)
+      alert('Error deleting course')
+    }
+  }
+
+  const filteredCourses = courses.filter(course =>
+    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,14 +94,6 @@ export default function AdminCourses() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link href="/admin-dashboard" className="text-2xl font-bold text-gray-900">LMS Admin</Link>
-              <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2">
-                <Search className="h-4 w-4 text-gray-500" />
-                <input 
-                  type="text" 
-                  placeholder="Search courses..." 
-                  className="bg-transparent border-none outline-none text-sm w-64"
-                />
-              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -109,149 +138,170 @@ export default function AdminCourses() {
         <main className="flex-1 p-6">
           {/* Page Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">Course Management</h2>
-                <p className="text-gray-600 mt-1">Create, edit, and manage your courses</p>
+                <p className="text-gray-600 mt-1">Create and manage your courses</p>
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                <Link href="/admin-create-course">Create New Course</Link>
-              </Button>
+              
+              <Link href="/admin-create-course">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Course
+                </Button>
+              </Link>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search courses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Filters and Actions */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                <option>All Status</option>
-                <option>Published</option>
-                <option>Draft</option>
-                <option>Archived</option>
-              </select>
-            </div>
-            
-            <div className="text-sm text-gray-600">
-              Showing {courses.length} of {courses.length} courses
-            </div>
+          {/* Course Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Courses</p>
+                    <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+                  </div>
+                  <BookOpen className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Published</p>
+                    <p className="text-2xl font-bold text-green-600">{courses.filter(c => c.published).length}</p>
+                  </div>
+                  <Eye className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Draft</p>
+                    <p className="text-2xl font-bold text-yellow-600">{courses.filter(c => !c.published).length}</p>
+                  </div>
+                  <Edit className="h-8 w-8 text-yellow-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-2xl font-bold text-purple-600">₹{courses.reduce((sum, c) => sum + (c.price || 0), 0).toLocaleString()}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Courses Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card key={course.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <BookOpen className="h-12 w-12 text-white" />
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading courses...</p>
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-12 text-center">
+                <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No courses found</h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm ? 'No courses match your search.' : 'Get started by creating your first course.'}
+                </p>
+                <Link href="/admin-create-course">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Course
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map((course) => (
+                <Card key={course.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
+                    {course.thumbnail ? (
+                      <img 
+                        src={course.thumbnail} 
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                        <BookOpen className="h-12 w-12 text-white" />
+                      </div>
+                    )}
                   </div>
-                </div>
-                
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-1">{course.title}</h3>
-                      <p className="text-gray-600 text-sm line-clamp-2">{course.description}</p>
+                  
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{course.title}</h3>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        course.published 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {course.published ? 'Published' : 'Draft'}
+                      </span>
                     </div>
-                    <div className="ml-2">
-                      <Button variant="ghost" size="sm">
-                        <MoreVertical className="h-4 w-4" />
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {course.description || 'No description available'}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <span>{course.lessons?.[0]?.count || 0} lessons</span>
+                        <span>₹{course.price?.toLocaleString() || '0'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Link href={`/course/${course.slug}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                      </Link>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteCourse(course.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      course.status === 'Published' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {course.status}
-                    </span>
-                    <span className="text-lg font-bold text-gray-900">₹{course.price.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      {course.students} students
-                    </div>
-                    <div>
-                      Created {new Date(course.created).toLocaleDateString()}
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {/* Create New Course Card */}
-            <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer">
-              <CardContent className="p-6 flex flex-col items-center justify-center h-full min-h-[300px]">
-                <div className="bg-blue-100 p-4 rounded-full mb-4">
-                  <Plus className="h-8 w-8 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">Create New Course</h3>
-                <p className="text-gray-600 text-sm text-center mb-4">
-                  Start building your next course and share knowledge with students
-                </p>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Link href="/admin-create-course">Get Started</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Course Statistics */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6 text-center">
-                <div className="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">{courses.length}</h3>
-                <p className="text-gray-600">Total Courses</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6 text-center">
-                <div className="bg-green-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {courses.reduce((sum, course) => sum + course.students, 0)}
-                </h3>
-                <p className="text-gray-600">Total Enrollments</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6 text-center">
-                <div className="bg-purple-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-purple-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {courses.filter(c => c.status === 'Published').length}
-                </h3>
-                <p className="text-gray-600">Published Courses</p>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>
