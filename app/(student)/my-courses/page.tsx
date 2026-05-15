@@ -14,7 +14,7 @@ export default async function MyCoursesPage() {
     .select(`
       id,
       created_at,
-      courses (
+      courses!inner (
         id,
         title,
         slug,
@@ -36,37 +36,40 @@ export default async function MyCoursesPage() {
 
       {enrollments && enrollments.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {enrollments.map((enrollment) => (
-            <Card key={enrollment.id} className="hover:shadow-lg transition-shadow">
-              {enrollment.courses?.thumbnail && (
-                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                  <img 
-                    src={enrollment.courses.thumbnail} 
-                    alt={enrollment.courses.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="line-clamp-2">{enrollment.courses?.title}</CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {enrollment.courses?.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button asChild className="w-full">
-                    <Link href={`/student/course/${enrollment.courses?.slug}`}>
-                      Continue Learning
-                    </Link>
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Enrolled on {new Date(enrollment.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {enrollments.map((enrollment) => {
+            const course = enrollment.courses as any
+            return (
+              <Card key={enrollment.id} className="hover:shadow-lg transition-shadow">
+                {course?.thumbnail && (
+                  <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+                    <img 
+                      src={course.thumbnail} 
+                      alt={course.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle className="line-clamp-2">{course?.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">
+                    {course?.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Button asChild className="w-full">
+                      <Link href={`/student/course/${course?.slug}`}>
+                        Continue Learning
+                      </Link>
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Enrolled on {new Date(enrollment.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-16">
