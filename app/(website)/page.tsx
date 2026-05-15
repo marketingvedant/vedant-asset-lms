@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 
 export default async function HomePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Get featured courses (published courses)
   const { data: courses } = await supabase

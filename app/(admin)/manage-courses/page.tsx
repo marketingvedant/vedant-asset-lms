@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils'
 import { Plus, Edit, Eye } from 'lucide-react'
 
 export default async function AdminCoursesPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: courses } = await supabase
     .from('courses')

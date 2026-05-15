@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 
 export default async function ServerAuthTest() {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   try {
     // Test server-side auth

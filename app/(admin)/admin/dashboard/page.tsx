@@ -6,7 +6,7 @@ import { BookOpen, Users, DollarSign, TrendingUp, Plus } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 
 export default async function AdminDashboard() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get stats with error handling
   let coursesCount = 0

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BookOpen } from 'lucide-react'
 
 export default async function MyCoursesPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Get all enrolled courses

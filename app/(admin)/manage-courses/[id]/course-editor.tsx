@@ -27,7 +27,7 @@ export default function CourseEditor({ course: initialCourse, lessons: initialLe
 
   const updateCourse = async (updates: Partial<Course>) => {
     setLoading(true)
-    const supabase = createClient()
+    const supabase = await createClient()
     
     try {
       const { error } = await supabase
@@ -241,7 +241,7 @@ function LessonsTab({
   const handleDeleteLesson = async (lessonId: string) => {
     if (!confirm('Are you sure you want to delete this lesson?')) return
 
-    const supabase = createClient()
+    const supabase = await createClient()
     const { error } = await supabase
       .from('lessons')
       .delete()
