@@ -43,7 +43,7 @@ export default function SimpleLoginPage() {
         // Redirect based on role
         setTimeout(() => {
           if (profile?.role === 'admin') {
-            window.location.href = '/admin-dashboard'
+            window.location.href = '/admin/dashboard'
           } else {
             window.location.href = '/student-dashboard'
           }

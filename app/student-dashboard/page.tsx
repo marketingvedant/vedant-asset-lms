@@ -98,26 +98,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                LMS Platform
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/student-dashboard" className="text-blue-600 font-medium">Dashboard</Link>
-              <Link href="/courses" className="text-gray-500 hover:text-gray-900">Browse Courses</Link>
-              <button onClick={handleSignOut} className="text-gray-500 hover:text-gray-900">
-                Sign Out
-              </button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
@@ -241,7 +221,7 @@ export default function StudentDashboard() {
                       <span className="text-sm text-gray-500">
                         Enrolled {new Date(enrollment.created_at).toLocaleDateString()}
                       </span>
-                      <Link href={`/student-course/${enrollment.courses.slug}`}>
+                      <Link href={`/learn/course/${enrollment.courses.slug}`}>
                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                           Continue
                         </Button>

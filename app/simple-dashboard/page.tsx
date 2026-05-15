@@ -120,7 +120,7 @@ export default function SimpleDashboardPage() {
             <CardContent className="space-y-4">
               {profile?.role === 'admin' ? (
                 <div className="space-y-2">
-                  <Link href="/admin-dashboard">
+                  <Link href="/admin/dashboard">
                     <Button className="w-full">Go to Admin Dashboard</Button>
                   </Link>
                   <Link href="/admin-courses">

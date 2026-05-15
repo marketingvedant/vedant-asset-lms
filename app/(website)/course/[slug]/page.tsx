@@ -41,15 +41,17 @@ export default function CoursePage() {
     checkUser()
   }, [params.slug])
 
+  useEffect(() => {
+    if (user && course) {
+      checkEnrollment(user.id, course.id)
+    }
+  }, [user, course])
+
   const checkUser = async () => {
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-      
-      if (user && course) {
-        checkEnrollment(user.id, course.id)
-      }
     } catch (error) {
       console.error('Error checking user:', error)
     }
@@ -65,10 +67,16 @@ export default function CoursePage() {
         .eq('course_id', courseId)
         .single()
 
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking enrollment:', error)
+        return
+      }
+
       if (data) {
         setIsEnrolled(true)
       }
     } catch (error) {
+      console.error('Error in checkEnrollment:', error)
       // User not enrolled, which is fine
     }
   }
@@ -117,6 +125,32 @@ export default function CoursePage() {
     try {
       const supabase = createClient()
 
+      // First, ensure user has a profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            role: 'student'
+          })
+
+        if (createProfileError) {
+          console.error('Error creating profile:', createProfileError)
+          throw new Error('Failed to create user profile')
+        }
+      } else if (profileError) {
+        console.error('Error checking profile:', profileError)
+        throw new Error('Failed to verify user profile')
+      }
+
       // Create enrollment (demo purchase - no payment gateway)
       const { error: enrollmentError } = await supabase
         .from('enrollments')
@@ -125,7 +159,13 @@ export default function CoursePage() {
           course_id: course.id
         })
 
-      if (enrollmentError) throw enrollmentError
+      if (enrollmentError) {
+        console.error('Enrollment error:', enrollmentError)
+        if (enrollmentError.code === '23505') {
+          throw new Error('You are already enrolled in this course')
+        }
+        throw new Error(`Failed to enroll: ${enrollmentError.message}`)
+      }
 
       // Create payment record (demo)
       const { error: paymentError } = await supabase
@@ -138,21 +178,25 @@ export default function CoursePage() {
           provider: 'demo'
         })
 
-      if (paymentError) throw paymentError
+      if (paymentError) {
+        console.error('Payment error:', paymentError)
+        throw new Error(`Failed to record payment: ${paymentError.message}`)
+      }
 
       setIsEnrolled(true)
       alert('Course purchased successfully! You can now access all lessons.')
 
     } catch (error) {
       console.error('Error purchasing course:', error)
-      alert('Error purchasing course. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Error purchasing course: ${errorMessage}`)
     } finally {
       setPurchasing(false)
     }
   }
 
   const goToCourse = () => {
-    router.push(`/student-course/${course?.slug}`)
+    router.push(`/learn/course/${course?.slug}`)
   }
 
   if (loading) {
@@ -178,28 +222,6 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                LMS Platform
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-500 hover:text-gray-900">Home</Link>
-              <Link href="/courses" className="text-gray-500 hover:text-gray-900">Courses</Link>
-              {user ? (
-                <Link href="/student-dashboard" className="text-gray-500 hover:text-gray-900">Dashboard</Link>
-              ) : (
-                <Link href="/login" className="text-gray-500 hover:text-gray-900">Login</Link>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Course Hero */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -363,7 +385,7 @@ export default function CoursePage() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">LMS Platform</h3>
+            <h3 className="text-2xl font-bold mb-4">Vedant Asset LMS</h3>
             <p className="text-gray-400">
               Empowering learners worldwide with quality education
             </p>

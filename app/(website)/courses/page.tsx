@@ -29,14 +29,18 @@ export default function CoursesPage() {
     try {
       const supabase = createClient()
       
+      console.log('Fetching courses...')
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false })
 
+      console.log('Courses query result:', { data, error })
+      
       if (error) throw error
       setCourses(data || [])
+      console.log('Courses set to state:', data)
     } catch (error) {
       console.error('Error fetching courses:', error)
     } finally {
@@ -46,24 +50,6 @@ export default function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                LMS Platform
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-500 hover:text-gray-900">Home</Link>
-              <Link href="/courses" className="text-blue-600 font-medium">Courses</Link>
-              <Link href="/login" className="text-gray-500 hover:text-gray-900">Login</Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -91,56 +77,78 @@ export default function CoursesPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="text-gray-600 mt-4">Loading courses...</p>
             </div>
-          ) : courses.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No courses available</h3>
-              <p className="text-gray-600">Check back later for new courses!</p>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {courses.map((course) => (
-                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-video bg-gray-200 overflow-hidden">
-                    {course.thumbnail ? (
-                      <img 
-                        src={course.thumbnail} 
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-                        <svg className="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                    )}
+            <>
+              {/* Debug Info */}
+              <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h3 className="font-semibold text-yellow-800 mb-2">Debug Info:</h3>
+                <p className="text-yellow-700">
+                  Found {courses.length} published courses in database
+                </p>
+                {courses.length > 0 && (
+                  <div className="mt-2 text-sm text-yellow-600">
+                    Courses: {courses.map(c => c.title).join(', ')}
                   </div>
-                  
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{course.title}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">
-                      {course.description || 'No description available'}
+                )}
+              </div>
+
+              {courses.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No courses available</h3>
+                  <p className="text-gray-600">Check back later for new courses!</p>
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-700 text-sm">
+                      If you just created a course, try refreshing the page or check the browser console for errors.
                     </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-blue-600">
-                        ₹{course.price?.toLocaleString() || '0'}
-                      </span>
-                      <Link href={`/course/${course.slug}`}>
-                        <Button className="bg-blue-600 hover:bg-blue-700">
-                          View Course
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {courses.map((course) => (
+                    <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      <div className="aspect-video bg-gray-200 overflow-hidden">
+                        {course.thumbnail ? (
+                          <img 
+                            src={course.thumbnail} 
+                            alt={course.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                            <svg className="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <CardContent className="p-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{course.title}</h3>
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {course.description || 'No description available'}
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-blue-600">
+                            ₹{course.price?.toLocaleString() || '0'}
+                          </span>
+                          <Link href={`/course/${course.slug}`}>
+                            <Button className="bg-blue-600 hover:bg-blue-700">
+                              View Course
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -149,7 +157,7 @@ export default function CoursesPage() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">LMS Platform</h3>
+            <h3 className="text-2xl font-bold mb-4">Vedant Asset LMS</h3>
             <p className="text-gray-400">
               Empowering learners worldwide with quality education
             </p>

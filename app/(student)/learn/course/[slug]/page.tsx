@@ -124,7 +124,7 @@ export default function StudentCoursePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <Link href="/student/dashboard" className="text-blue-600 hover:text-blue-800">
+              <Link href="/dashboard" className="text-blue-600 hover:text-blue-800">
                 ← Back to Dashboard
               </Link>
               <h1 className="text-xl font-semibold text-gray-900">{course.title}</h1>

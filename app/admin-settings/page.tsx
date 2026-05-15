@@ -78,7 +78,7 @@ export default function AdminSettings() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">System Settings</h2>
-                <p className="text-gray-600 mt-1">Configure your LMS platform settings</p>
+                <p className="text-gray-600 mt-1">Configure your Vedant Asset LMS platform settings</p>
               </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Save className="h-4 w-4 mr-2" />
@@ -103,7 +103,7 @@ export default function AdminSettings() {
                     Platform Name
                   </label>
                   <Input 
-                    defaultValue="Minimal LMS"
+                    defaultValue="Vedant Asset LMS"
                     className="w-full"
                   />
                 </div>

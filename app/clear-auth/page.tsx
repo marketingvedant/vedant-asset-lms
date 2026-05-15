@@ -67,7 +67,7 @@ export default function ClearAuthPage() {
         <ol className="list-decimal list-inside space-y-1">
           <li>You'll be redirected to login</li>
           <li>Log in with your credentials</li>
-          <li>You should be redirected to <code>/admin-dashboard</code></li>
+          <li>You should be redirected to <code>/admin/dashboard</code></li>
         </ol>
       </div>
     </div>

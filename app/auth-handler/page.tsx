@@ -31,9 +31,9 @@ export default function AuthHandler() {
           .single()
 
         if (profile?.role === 'admin') {
-          router.push('/admin-dashboard')
+          router.push('/admin/dashboard')
         } else {
-          router.push('/student/dashboard')
+          router.push('/dashboard')
         }
       } catch (error) {
         console.error('Auth handler error:', error)

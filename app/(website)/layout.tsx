@@ -25,7 +25,7 @@ export default async function WebsiteLayout({
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold">
-            Minimal LMS
+            Vedant Asset LMS
           </Link>
           
           <nav className="flex items-center gap-4">
@@ -35,8 +35,9 @@ export default async function WebsiteLayout({
             
             {user ? (
               <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Welcome, {user.email}</span>
                 <Button asChild variant="outline">
-                  <Link href={userProfile?.role === 'admin' ? '/admin/dashboard' : '/student/dashboard'}>
+                  <Link href={userProfile?.role === 'admin' ? '/admin/dashboard' : '/dashboard'}>
                     {userProfile?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                   </Link>
                 </Button>

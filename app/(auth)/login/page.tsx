@@ -72,9 +72,9 @@ export default function LoginPage() {
                 console.log('New profile created:', newProfile)
                 // Redirect based on new profile
                 if (newProfile.role === 'admin') {
-                  window.location.href = '/admin-dashboard'
+                  router.push('/admin/dashboard')
                 } else {
-                  window.location.href = '/student/dashboard'
+                  router.push('/dashboard')
                 }
                 return
               }
@@ -87,10 +87,10 @@ export default function LoginPage() {
         // Redirect based on existing profile or default to student
         if (profile?.role === 'admin') {
           console.log('Redirecting to admin dashboard')
-          window.location.href = '/admin-dashboard'
+          router.push('/admin/dashboard')
         } else {
           console.log('Redirecting to student dashboard')
-          window.location.href = '/student/dashboard'
+          router.push('/dashboard')
         }
       } else {
         setError('Authentication failed. Please try again.')

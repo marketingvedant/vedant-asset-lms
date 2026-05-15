@@ -37,7 +37,7 @@ export default async function TestMiddleware() {
             <div className="bg-blue-100 p-4 rounded">
               <h2 className="font-semibold text-blue-800">🎉 Admin Access Confirmed</h2>
               <a 
-                href="/admin-dashboard" 
+                href="/admin/dashboard" 
                 className="inline-block mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
               >
                 Go to Admin Dashboard

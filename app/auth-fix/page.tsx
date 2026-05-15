@@ -48,7 +48,7 @@ export default function AuthFixPage() {
         if (profile?.role === 'admin') {
           setStatus('🎉 Admin authentication confirmed! Redirecting...')
           setTimeout(() => {
-            window.location.href = '/admin-dashboard'
+            window.location.href = '/admin/dashboard'
           }, 2000)
         }
       } else {
