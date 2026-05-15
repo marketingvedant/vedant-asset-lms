@@ -8,39 +8,62 @@ import { formatPrice } from '@/lib/utils'
 export default async function AdminDashboard() {
   const supabase = createClient()
 
-  // Get stats
-  const [
-    { count: coursesCount },
-    { count: studentsCount },
-    { count: enrollmentsCount },
-    { data: payments }
-  ] = await Promise.all([
-    supabase.from('courses').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
-    supabase.from('enrollments').select('*', { count: 'exact', head: true }),
-    supabase.from('payments').select('amount').eq('status', 'completed')
-  ])
+  // Get stats with error handling
+  let coursesCount = 0
+  let studentsCount = 0
+  let enrollmentsCount = 0
+  let totalRevenue = 0
+  let recentCourses = []
+  let recentEnrollments = []
 
-  const totalRevenue = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0
+  try {
+    // Get stats
+    const [
+      coursesResult,
+      studentsResult,
+      enrollmentsResult,
+      paymentsResult
+    ] = await Promise.all([
+      supabase.from('courses').select('*', { count: 'exact', head: true }).then(r => r).catch(() => ({ count: 0 })),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student').then(r => r).catch(() => ({ count: 0 })),
+      supabase.from('enrollments').select('*', { count: 'exact', head: true }).then(r => r).catch(() => ({ count: 0 })),
+      supabase.from('payments').select('amount').eq('status', 'completed').then(r => r).catch(() => ({ data: [] }))
+    ])
 
-  // Get recent courses
-  const { data: recentCourses } = await supabase
-    .from('courses')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(5)
+    coursesCount = coursesResult.count || 0
+    studentsCount = studentsResult.count || 0
+    enrollmentsCount = enrollmentsResult.count || 0
+    totalRevenue = paymentsResult.data?.reduce((sum, payment) => sum + payment.amount, 0) || 0
 
-  // Get recent enrollments
-  const { data: recentEnrollments } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      created_at,
-      profiles (email),
-      courses (title)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5)
+    // Get recent courses
+    const coursesData = await supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(r => r.data || [])
+      .catch(() => [])
+
+    recentCourses = coursesData
+
+    // Get recent enrollments
+    const enrollmentsData = await supabase
+      .from('enrollments')
+      .select(`
+        id,
+        created_at,
+        profiles (email),
+        courses (title)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(r => r.data || [])
+      .catch(() => [])
+
+    recentEnrollments = enrollmentsData
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

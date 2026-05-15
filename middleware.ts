@@ -54,12 +54,24 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user || userProfile?.role !== 'admin') {
-      console.log('Protecting admin route, redirecting to login')
+  // Protect admin routes (new structure)
+  if (request.nextUrl.pathname.startsWith('/admin-') || request.nextUrl.pathname.startsWith('/admin/')) {
+    if (!user) {
+      console.log('No user found, redirecting to login')
       return NextResponse.redirect(new URL('/login', request.url))
     }
+    
+    if (!userProfile) {
+      console.log('No profile found for user, redirecting to login')
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    if (userProfile.role !== 'admin') {
+      console.log(`User role is ${userProfile.role}, not admin, redirecting to login`)
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    console.log('Admin access granted for user:', user.email)
   }
 
   // Protect student routes
@@ -74,7 +86,7 @@ export async function middleware(request: NextRequest) {
   if (user && userProfile && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
     console.log('Redirecting authenticated user away from auth pages')
     if (userProfile?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+      return NextResponse.redirect(new URL('/admin-dashboard', request.url))
     } else {
       return NextResponse.redirect(new URL('/student/dashboard', request.url))
     }
@@ -86,6 +98,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Temporarily disable ALL middleware for debugging
+    // '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

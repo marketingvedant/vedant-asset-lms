@@ -86,7 +86,7 @@ export default function LoginPage() {
         // Redirect based on role
         if (profile?.role === 'admin') {
           console.log('Redirecting to admin dashboard')
-          window.location.href = '/admin/dashboard'
+          window.location.href = '/admin-dashboard'
         } else {
           console.log('Redirecting to student dashboard')
           window.location.href = '/student/dashboard'
