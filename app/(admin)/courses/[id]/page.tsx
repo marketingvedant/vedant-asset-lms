@@ -9,7 +9,7 @@ interface AdminCoursePageProps {
 }
 
 export default async function AdminCoursePage({ params }: AdminCoursePageProps) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get course details
     const { data: course } = await supabase
