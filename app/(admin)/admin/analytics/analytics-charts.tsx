@@ -59,7 +59,7 @@ export default function AnalyticsCharts({ monthlyData, topCourses }: Props) {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(val: number) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']} />
+                <Tooltip formatter={(val) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Revenue']} />
                 <Line
                   type="monotone"
                   dataKey="revenue"
