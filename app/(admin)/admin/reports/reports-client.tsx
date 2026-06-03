@@ -6,26 +6,45 @@ import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 
+// Supabase returns joined rows as arrays
+type ProfileJoin = { email: string }[] | { email: string } | null
+type CourseJoin = { title: string; price?: number }[] | { title: string; price?: number } | null
+
 interface Payment {
   id: string
   amount: number
   status: string
   provider: string
   created_at: string
-  profiles: { email: string } | null
-  courses: { title: string } | null
+  profiles: ProfileJoin
+  courses: CourseJoin
 }
 
 interface Enrollment {
   id: string
   created_at: string
-  profiles: { email: string } | null
-  courses: { title: string; price: number } | null
+  profiles: ProfileJoin
+  courses: CourseJoin
 }
 
 interface Props {
   payments: Payment[]
   enrollments: Enrollment[]
+}
+
+function getEmail(profiles: ProfileJoin): string {
+  if (!profiles) return ''
+  return Array.isArray(profiles) ? (profiles[0]?.email || '') : profiles.email
+}
+
+function getTitle(courses: CourseJoin): string {
+  if (!courses) return ''
+  return Array.isArray(courses) ? (courses[0]?.title || '') : courses.title
+}
+
+function getPrice(courses: CourseJoin): number {
+  if (!courses) return 0
+  return Array.isArray(courses) ? (courses[0]?.price || 0) : (courses.price || 0)
 }
 
 function downloadCSV(filename: string, rows: string[][]) {
@@ -47,8 +66,8 @@ export default function ReportsClient({ payments, enrollments }: Props) {
       ['ID', 'Student Email', 'Course', 'Amount', 'Status', 'Provider', 'Date'],
       ...payments.map((p) => [
         p.id,
-        p.profiles?.email || '',
-        p.courses?.title || '',
+        getEmail(p.profiles),
+        getTitle(p.courses),
         p.amount.toString(),
         p.status,
         p.provider,
@@ -63,9 +82,9 @@ export default function ReportsClient({ payments, enrollments }: Props) {
       ['ID', 'Student Email', 'Course', 'Course Price', 'Enrolled On'],
       ...enrollments.map((e) => [
         e.id,
-        e.profiles?.email || '',
-        e.courses?.title || '',
-        e.courses?.price?.toString() || '0',
+        getEmail(e.profiles),
+        getTitle(e.courses),
+        getPrice(e.courses).toString(),
         new Date(e.created_at).toLocaleDateString('en-IN'),
       ]),
     ]
@@ -117,8 +136,8 @@ export default function ReportsClient({ payments, enrollments }: Props) {
                   <tbody>
                     {payments.map((p) => (
                       <tr key={p.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="py-3 px-2">{p.profiles?.email || '—'}</td>
-                        <td className="py-3 px-2">{p.courses?.title || '—'}</td>
+                        <td className="py-3 px-2">{getEmail(p.profiles) || '—'}</td>
+                        <td className="py-3 px-2">{getTitle(p.courses) || '—'}</td>
                         <td className="py-3 px-2 font-medium">{formatPrice(p.amount)}</td>
                         <td className="py-3 px-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -171,9 +190,9 @@ export default function ReportsClient({ payments, enrollments }: Props) {
                   <tbody>
                     {enrollments.map((e) => (
                       <tr key={e.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="py-3 px-2">{e.profiles?.email || '—'}</td>
-                        <td className="py-3 px-2">{e.courses?.title || '—'}</td>
-                        <td className="py-3 px-2">{formatPrice(e.courses?.price || 0)}</td>
+                        <td className="py-3 px-2">{getEmail(e.profiles) || '—'}</td>
+                        <td className="py-3 px-2">{getTitle(e.courses) || '—'}</td>
+                        <td className="py-3 px-2">{formatPrice(getPrice(e.courses))}</td>
                         <td className="py-3 px-2 text-muted-foreground">
                           {new Date(e.created_at).toLocaleDateString('en-IN')}
                         </td>
