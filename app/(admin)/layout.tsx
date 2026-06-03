@@ -65,19 +65,28 @@ export default function AdminLayout({
           </Link>
           
           <nav className="flex items-center gap-4">
-            <Link href="/admin/dashboard" className="hover:underline">
+            <Link href="/admin/dashboard" className="hover:underline text-sm">
               Dashboard
             </Link>
-            <Link href="/admin/manage-courses" className="hover:underline">
+            <Link href="/admin/manage-courses" className="hover:underline text-sm">
               Courses
             </Link>
-            <Link href="/" className="hover:underline">
+            <Link href="/admin/users" className="hover:underline text-sm">
+              Users
+            </Link>
+            <Link href="/admin/analytics" className="hover:underline text-sm">
+              Analytics
+            </Link>
+            <Link href="/admin/reports" className="hover:underline text-sm">
+              Reports
+            </Link>
+            <Link href="/" className="hover:underline text-sm">
               View Site
             </Link>
-            
+
             <span className="text-sm text-gray-600">Admin: {user.email}</span>
             <form action="/auth/signout" method="post">
-              <Button type="submit" variant="ghost">
+              <Button type="submit" variant="ghost" size="sm">
                 Sign Out
               </Button>
             </form>
